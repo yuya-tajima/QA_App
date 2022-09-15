@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.view.GravityCompat
 import com.google.android.material.navigation.NavigationView
@@ -56,10 +57,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val mEventContentListener = object : ChildEventListener {
         override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
             val map = dataSnapshot.value as Map<String, String>
+
+            val genre = dataSnapshot.key
+
             for (key in map.keys) {
                 if (favoriteHashList.containsKey(key)) {
                     val temp = map[key] as Map<String, String>
-                    createQuestions(key, temp)
+                    createQuestions(key, temp, genre!!.toInt())
                 }
             }
             mAdapter.notifyDataSetChanged()
@@ -82,9 +86,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private fun createQuestions (key: String, map: Map<String, String>) {
+    private fun createQuestions (key: String, map: Map<String, String>, genre: Int) {
         val title = map["title"] ?: ""
-        Log.d("PRINT_DEBUG", "${title}")
         val body = map["body"] ?: ""
         val name = map["name"] ?: ""
         val uid = map["uid"] ?: ""
@@ -110,16 +113,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         val question = Question(title, body, name, uid, key ?: "",
-            mGenre, bytes, answerArrayList)
+            genre, bytes, answerArrayList)
         mQuestionArrayList.add(question)
     }
 
     private val mEventListener = object : ChildEventListener {
         override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
+            Log.d("PRINT_DEBUG", "${favoriteHashList}")
             val map = dataSnapshot.value as Map<String, String>
             val key = dataSnapshot.key as String
 
-            createQuestions(key, map)
+            createQuestions(key, map, mGenre)
 
             mAdapter.notifyDataSetChanged()
         }
@@ -219,7 +223,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onResume() {
         super.onResume()
-        Log.d("PRINT_DEBUG", "resume")
         // 1:趣味を既定の選択とする
         if(mGenre == 0) {
             onNavigationItemSelected(nav_view.menu.getItem(0))
@@ -278,23 +281,24 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         mAdapter.setQuestionArrayList(mQuestionArrayList)
         listView.adapter = mAdapter
 
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user != null) {
+            favoriteHashList.clear()
+            val dataBaseReference = FirebaseDatabase.getInstance().reference
+            val userRef = dataBaseReference.child(UsersPATH).child(user.uid).child(FavoritePATH)
+            userRef.addChildEventListener(userFavoriteEventListener)
+        }
+
         if (mGenre == 5) {
-            val user = FirebaseAuth.getInstance().currentUser
-            if (user != null) {
-                favoriteHashList.clear()
-                val dataBaseReference = FirebaseDatabase.getInstance().reference
-                val userRef = dataBaseReference.child(UsersPATH).child(user.uid).child(FavoritePATH)
-                userRef.addChildEventListener(userFavoriteEventListener)
-            }
+            fab.visibility = View.GONE
             val ref = mDatabaseReference.child(ContentsPATH)
             ref.addChildEventListener(mEventContentListener)
         } else {
-
+            fab.visibility = View.VISIBLE
             // 選択したジャンルにリスナーを登録する
             if (mGenreRef != null) {
                 mGenreRef!!.removeEventListener(mEventListener)
             }
-
             mGenreRef = mDatabaseReference.child(ContentsPATH).child(mGenre.toString())
             mGenreRef!!.addChildEventListener(mEventListener)
         }

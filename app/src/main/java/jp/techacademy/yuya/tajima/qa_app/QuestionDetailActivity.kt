@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Base64
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import kotlinx.android.synthetic.main.activity_question_detail.*
@@ -56,19 +57,7 @@ class QuestionDetailActivity : AppCompatActivity() {
 
     private val mFavoriteEventListener = object : ChildEventListener {
         override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
-            val map = dataSnapshot.value as Map<String, String>
-            val title = map["title"] ?: ""
-            val name = map["name"] ?: ""
-            val imageString = map["image"] ?: ""
-            val bytes =
-                if (imageString.isNotEmpty()) {
-                    Base64.decode(imageString, Base64.DEFAULT)
-                } else {
-                    byteArrayOf()
-                }
-
-            val userFavorites = Favorite(title, name, bytes)
-            mAdapter.setUserFavorite(userFavorites)
+            mAdapter.isFavorite = true
             mAdapter.notifyDataSetChanged()
         }
 
@@ -130,5 +119,4 @@ class QuestionDetailActivity : AppCompatActivity() {
         mAnswerRef = dataBaseReference.child(ContentsPATH).child(mQuestion.genre.toString()).child(mQuestion.questionUid).child(AnswersPATH)
         mAnswerRef.addChildEventListener(mEventListener)
     }
-
 }

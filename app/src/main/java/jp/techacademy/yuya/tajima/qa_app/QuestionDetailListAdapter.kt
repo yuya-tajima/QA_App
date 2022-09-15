@@ -23,7 +23,7 @@ class QuestionDetailListAdapter(context: Context, private val mQustion: Question
 
     private var mLayoutInflater: LayoutInflater? = null
 
-    private var mUserFavorites: Favorite? = null
+    var isFavorite: Boolean = false
 
     init {
         mLayoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -86,8 +86,6 @@ class QuestionDetailListAdapter(context: Context, private val mQustion: Question
                 favoriteImageView.visibility = View.VISIBLE
             }
 
-            var isFavorite = mUserFavorites != null
-
             if (isFavorite) {
                 favoriteImageView.setImageResource(R.drawable.ic_star)
             } else {
@@ -104,11 +102,7 @@ class QuestionDetailListAdapter(context: Context, private val mQustion: Question
                     favoriteImageView.setImageResource(R.drawable.ic_star_border)
                     isFavorite = false
                 } else {
-                    val map = HashMap<String, String>()
-                    map["name"] = mQustion.name
-                    map["title"] = mQustion.title
-                    map["image"] = Base64.encodeToString(mQustion.imageBytes, Base64.DEFAULT)
-                    favoriteRef.push().setValue(map)
+                    favoriteRef.push().setValue(mQustion.title)
                     favoriteImageView.setImageResource(R.drawable.ic_star)
                     isFavorite = true
                 }
@@ -131,9 +125,5 @@ class QuestionDetailListAdapter(context: Context, private val mQustion: Question
         }
 
         return convertView
-    }
-
-    fun setUserFavorite(userFavorites: Favorite) {
-        mUserFavorites = userFavorites
     }
 }
