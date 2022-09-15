@@ -37,7 +37,6 @@ class AnswerSendActivity : AppCompatActivity(), View.OnClickListener, DatabaseRe
         } else {
             Snackbar.make(findViewById(android.R.id.content), getString(R.string.send_answer_failure), Snackbar.LENGTH_LONG).show()
         }
-
     }
 
     override fun onClick(v: View) {

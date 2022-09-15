@@ -3,12 +3,16 @@ package jp.techacademy.yuya.tajima.qa_app
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Base64
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.TextView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.android.synthetic.main.list_question_detail.view.*
 
 class QuestionDetailListAdapter(context: Context, private val mQustion: Question) : BaseAdapter() {
@@ -18,6 +22,8 @@ class QuestionDetailListAdapter(context: Context, private val mQustion: Question
     }
 
     private var mLayoutInflater: LayoutInflater? = null
+
+    private var mUserFavorites: Favorite? = null
 
     init {
         mLayoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -69,6 +75,45 @@ class QuestionDetailListAdapter(context: Context, private val mQustion: Question
                 val imageView = convertView.findViewById<View>(R.id.imageView) as ImageView
                 imageView.setImageBitmap(image)
             }
+
+            val favoriteImageView = convertView.findViewById<View>(R.id.favoriteImageView) as ImageView
+
+            val user = FirebaseAuth.getInstance().currentUser
+
+            if (user == null) {
+                favoriteImageView.visibility = View.GONE
+            } else {
+                favoriteImageView.visibility = View.VISIBLE
+            }
+
+            var isFavorite = mUserFavorites != null
+
+            if (isFavorite) {
+                favoriteImageView.setImageResource(R.drawable.ic_star)
+            } else {
+                favoriteImageView.setImageResource(R.drawable.ic_star_border)
+            }
+
+            favoriteImageView.setOnClickListener {
+                Log.d("PRINT_DEBUG", "touched favorite image")
+                val dataBaseReference = FirebaseDatabase.getInstance().reference
+                val favoriteRef = dataBaseReference.child(UsersPATH).child(mQustion.uid).child(FavoritePATH).child(mQustion.questionUid)
+
+                if (isFavorite) {
+                    favoriteRef.removeValue()
+                    favoriteImageView.setImageResource(R.drawable.ic_star_border)
+                    isFavorite = false
+                } else {
+                    val map = HashMap<String, String>()
+                    map["name"] = mQustion.name
+                    map["title"] = mQustion.title
+                    map["image"] = Base64.encodeToString(mQustion.imageBytes, Base64.DEFAULT)
+                    favoriteRef.push().setValue(map)
+                    favoriteImageView.setImageResource(R.drawable.ic_star)
+                    isFavorite = true
+                }
+            }
+
         } else {
             if (convertView == null) {
                 convertView = mLayoutInflater!!.inflate(R.layout.list_answer, parent, false)!!
@@ -86,5 +131,9 @@ class QuestionDetailListAdapter(context: Context, private val mQustion: Question
         }
 
         return convertView
+    }
+
+    fun setUserFavorite(userFavorites: Favorite) {
+        mUserFavorites = userFavorites
     }
 }
