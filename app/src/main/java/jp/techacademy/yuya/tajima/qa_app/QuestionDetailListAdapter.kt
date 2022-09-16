@@ -84,28 +84,26 @@ class QuestionDetailListAdapter(context: Context, private val mQustion: Question
                 favoriteImageView.visibility = View.GONE
             } else {
                 favoriteImageView.visibility = View.VISIBLE
+                favoriteImageView.setOnClickListener {
+                    val dataBaseReference = FirebaseDatabase.getInstance().reference
+                    val favoriteRef = dataBaseReference.child(UsersPATH).child(user.uid).child(FavoritePATH).child(mQustion.questionUid)
+
+                    if (isFavorite) {
+                        favoriteRef.removeValue()
+                        favoriteImageView.setImageResource(R.drawable.ic_star_border)
+                        isFavorite = false
+                    } else {
+                        favoriteRef.push().setValue(mQustion.title)
+                        favoriteImageView.setImageResource(R.drawable.ic_star)
+                        isFavorite = true
+                    }
+                }
             }
 
             if (isFavorite) {
                 favoriteImageView.setImageResource(R.drawable.ic_star)
             } else {
                 favoriteImageView.setImageResource(R.drawable.ic_star_border)
-            }
-
-            favoriteImageView.setOnClickListener {
-                Log.d("PRINT_DEBUG", "touched favorite image")
-                val dataBaseReference = FirebaseDatabase.getInstance().reference
-                val favoriteRef = dataBaseReference.child(UsersPATH).child(mQustion.uid).child(FavoritePATH).child(mQustion.questionUid)
-
-                if (isFavorite) {
-                    favoriteRef.removeValue()
-                    favoriteImageView.setImageResource(R.drawable.ic_star_border)
-                    isFavorite = false
-                } else {
-                    favoriteRef.push().setValue(mQustion.title)
-                    favoriteImageView.setImageResource(R.drawable.ic_star)
-                    isFavorite = true
-                }
             }
 
         } else {
