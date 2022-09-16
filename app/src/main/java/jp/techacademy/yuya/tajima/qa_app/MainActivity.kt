@@ -39,13 +39,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
 
+
         }
 
-        override fun onChildRemoved(p0: DataSnapshot) {
-
+        override fun onChildRemoved(dataSnapshot: DataSnapshot) {
+            val questionId = dataSnapshot.key as String
+            favoriteHashList.remove(questionId)
         }
 
         override fun onChildMoved(p0: DataSnapshot, p1: String?) {
+
 
         }
 
@@ -119,7 +122,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private val mEventListener = object : ChildEventListener {
         override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
-            Log.d("PRINT_DEBUG", "${favoriteHashList}")
             val map = dataSnapshot.value as Map<String, String>
             val key = dataSnapshot.key as String
 
@@ -226,14 +228,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // 1:趣味を既定の選択とする
         if(mGenre == 0) {
             onNavigationItemSelected(nav_view.menu.getItem(0))
+        } else if (mGenre == 5) {
+            onNavigationItemSelected(nav_view.menu.getItem(4))
         }
 
         val user = FirebaseAuth.getInstance().currentUser
 
-        if (user == null) {
-            val favoriteNavigationView = nav_view.menu.findItem(R.id.nav_favorite)
-            favoriteNavigationView.isVisible = false
-        }
+        val favoriteNavigationView = nav_view.menu.findItem(R.id.nav_favorite)
+        favoriteNavigationView.isVisible = user != null
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
